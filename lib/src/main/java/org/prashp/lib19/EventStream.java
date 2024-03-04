@@ -61,9 +61,9 @@ public class EventStream {
 
 
     public static class Event {
-        long version = 0;
-        long timestamp = 0;
-        Object payload;
+        final long version;
+        final long timestamp;
+        final Object payload;
 
         public Event(long version, long timestamp, Object payload) {
             this.version = version;

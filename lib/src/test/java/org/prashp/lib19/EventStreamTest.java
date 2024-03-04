@@ -16,6 +16,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -56,25 +58,33 @@ class EventStreamTest {
     }
 
     public static class SourceAndSink implements SourceStream, SinkStream {
-        private Queue<Event> sourceQueue = new LinkedList<>();
-        private Queue<Event> sinkQueue = new LinkedList<>();
+        private LinkedBlockingQueue<Event> sourceQueue = new LinkedBlockingQueue<>();
+        private LinkedBlockingQueue<Event> sinkQueue = new LinkedBlockingQueue<>();
 
-        public Queue<Event> getSinkQueue() {
+        public LinkedBlockingQueue<Event> getSinkQueue() {
             return sinkQueue;
         }
 
-        public Queue<Event> getSourceQueue() {
+        public LinkedBlockingQueue<Event> getSourceQueue() {
             return sourceQueue;
         }
 
         @Override
         public Event getEvent() {
-            return sourceQueue.poll();
+            try {
+                return sourceQueue.take();
+            } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+            }
         }
 
         @Override
         public void writeEvent(Event e) {
-            sinkQueue.offer(e);
+            try {
+                sinkQueue.put(e);
+            } catch (InterruptedException e1) {
+                throw new IllegalStateException(e1);
+            }
         }
 
     }
