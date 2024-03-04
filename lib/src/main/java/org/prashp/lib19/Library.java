@@ -3,8 +3,74 @@
  */
 package org.prashp.lib19;
 
-public class Library {
-    public boolean someLibraryMethod() {
-        return true;
+import java.util.ArrayList;
+import java.util.Comparator;
+
+public class EventStream {
+
+    SourceStream source;
+    SinkStream sink;
+
+    boolean stop = false;
+
+
+    public EventStream(SourceStream source, SinkStream sink, long timeWindowMillis) {
+
     }
+
+    /**
+     * Sorts events in given stream by version in a given duration
+     * @param duration specify a specific amount of time for a buffer to store events and sort
+     */
+    public void process(long duration) {
+        //instantiate buffer; will be used to hold events
+        ArrayList<Event> buffer = new ArrayList<>();
+
+        //use nanoTime to calculate how much time elapsed.
+        long finish = (long) (System.nanoTime() + duration * Math.pow(10,7));
+        while(!stop)
+        {
+            while(finish >= System.nanoTime()) {
+                buffer.add(source.getEvent());
+            }
+            buffer.sort(Comparator.comparingLong(Event::getVersion));
+
+            for (Event e : buffer)
+            {
+                sink.writeEvent(e);
+            }
+            buffer = null;
+
+        }
+
+        //sorts by using version
+
+        //writes sorted events to sink stream
+
+
+    }
+
+    public void stop() {
+        this.stop = true;
+    }
+
 }
+
+
+interface Event {
+    long version = 0;
+    long timestamp = 0;
+
+    long getVersion();
+    long getTimestamp();
+}
+
+
+interface SourceStream {
+    Event getEvent();
+}
+
+interface SinkStream {
+    void writeEvent(Event e);
+}
+
