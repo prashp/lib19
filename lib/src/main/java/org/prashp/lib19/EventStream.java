@@ -13,16 +13,20 @@ public class EventStream {
 
     boolean stop = false;
 
+    long duration;
+
 
     public EventStream(SourceStream source, SinkStream sink, long timeWindowMillis) {
+        duration = timeWindowMillis;
+        this.source = source;
+        this.sink = sink;
 
     }
 
     /**
      * Sorts events in given stream by version in a given duration
-     * @param duration specify a specific amount of time for a buffer to store events and sort
      */
-    public void process(long duration) {
+    public void process() {
         //instantiate buffer; will be used to hold events
         ArrayList<Event> buffer = new ArrayList<>();
 
