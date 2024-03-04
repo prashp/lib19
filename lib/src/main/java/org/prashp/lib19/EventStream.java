@@ -58,23 +58,42 @@ public class EventStream {
         this.stop = true;
     }
 
-}
 
 
-interface Event {
-    long version = 0;
-    long timestamp = 0;
+    public static class Event {
+        long version = 0;
+        long timestamp = 0;
+        Object payload;
 
-    long getVersion();
-    long getTimestamp();
+        public Event(long version, long timestamp, Object payload) {
+            this.version = version;
+            this.timestamp = timestamp;
+            this.payload = payload;
+        }
+
+        public long getVersion() {
+            return version;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public Object getPayload() {
+            return payload;
+        }
+
+
+    }
+
 }
 
 
 interface SourceStream {
-    Event getEvent();
+    EventStream.Event getEvent();
 }
 
 interface SinkStream {
-    void writeEvent(Event e);
+    void writeEvent(EventStream.Event e);
 }
 
