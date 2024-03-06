@@ -6,7 +6,7 @@ package org.prashp.lib19;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-public class EventStream {
+public class EventStream implements Runnable{ // FIXME - make this class extend Runnable
 
     SourceStream source;
     SinkStream sink;
@@ -27,25 +27,11 @@ public class EventStream {
      * Sorts events in given stream by version in a given duration
      */
     public void process() {
-        //instantiate buffer; will be used to hold events
-        ArrayList<Event> buffer = new ArrayList<>();
+        // FIXME - this method should start a new thread that handles the below logic
+        Thread eventLogic = new Thread(new EventStream(source, sink, duration));
+        eventLogic.setDaemon(true);
+        eventLogic.start();
 
-        //use nanoTime to calculate how much time elapsed.
-        long finish = (long) (System.nanoTime() + duration * Math.pow(10,7));
-        while(!stop)
-        {
-            while(finish >= System.nanoTime()) {
-                buffer.add(source.getEvent());
-            }
-            buffer.sort(Comparator.comparingLong(Event::getVersion));
-
-            for (Event e : buffer)
-            {
-                sink.writeEvent(e);
-            }
-            buffer = null;
-
-        }
 
         //sorts by using version
 
@@ -54,10 +40,62 @@ public class EventStream {
 
     }
 
+    public static void main(String[] args) throws Exception {
+        Runnable sumanthRunnable = new Runnable() {
+            @Override
+            public void run() {
+               log(">>>>>>>>> " + Thread.currentThread().getName());
+            }
+        };
+
+        //sumanthRunnable.run();
+
+        log("BEFORE new thread");
+        Thread sumThread = new Thread(sumanthRunnable, "SUMANTH");
+        sumThread.start();
+        log("STARTED new thread, SLEEPING");
+
+        Thread.sleep(5_000);
+        log("DONE SLEEP");
+
+    }
+
+    private static void log(String str)
+    {
+        System.out.println(Thread.currentThread().getName() + " " + str);
+    }
+
     public void stop() {
         this.stop = true;
     }
 
+    @Override
+    public void run() {
+
+        log("Starting Run");
+        //instantiate buffer; will be used to hold events
+        ArrayList<Event> buffer = new ArrayList<>();
+
+        //use nanoTime to calculate how much time elapsed.
+        long finish = (long) (System.nanoTime() + duration * Math.pow(10,9));
+        while(!stop)
+        {
+            log("Adding to buffer");
+            while(finish >= System.nanoTime()) {
+                buffer.add(source.getEvent());
+            }
+            log("Done adding to buffer; sorting now");
+
+            buffer.sort(Comparator.comparingLong(Event::getVersion));
+
+            for (Event e : buffer)
+            {
+                sink.writeEvent(e);
+            }
+            buffer.clear();
+
+        }
+    }
 
 
     public static class Event {

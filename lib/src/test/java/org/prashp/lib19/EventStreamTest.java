@@ -28,7 +28,7 @@ class EventStreamTest {
         Thread.dumpStack();
     }
 
-    @Test void testEventStream() {
+    @Test void testEventStream() throws Exception {
         SourceAndSink ss = new SourceAndSink();
         EventStream eventStream = new EventStream(ss, ss, 100);
         eventStream.process();
@@ -40,7 +40,13 @@ class EventStreamTest {
         // await 150ms & drain events, they should be sorted
         Uninterruptibles.sleepUninterruptibly(150, TimeUnit.MILLISECONDS);
         long[] processedEvents = IntStream.range(1, 100)
-            .mapToLong(n -> ss.getSinkQueue().poll().getVersion())
+            .mapToLong(n -> {
+                try {
+                    return ss.getSinkQueue().take().getVersion();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            })
             .toArray();
 
         // asser that the array is sorted
